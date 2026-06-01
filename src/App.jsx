@@ -554,23 +554,61 @@ function FTextarea({ label, placeholder, value, onChange }) {
 
 function Waitlist({ dark }) {
   const { t } = useLang();
-  const [email,setEmail]=useState(""); const [done,setDone]=useState(false);
-  const submit=()=>{ if(email.includes("@")) setDone(true); };
-  if(done) return (
-    <div style={{ textAlign:"center",animation:"riseIn .5s ease" }}>
-      <div style={{ width:48,height:48,borderRadius:"50%",background:`linear-gradient(135deg,${H.primary},${H.purple})`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,margin:"0 auto 12px",color:"#fff" }}>✦</div>
-      <h3 style={{ fontFamily:"'Playfair Display',Georgia,serif",fontSize:20,color:dark?"#fff":H.text,marginBottom:6 }}>{t.waitlistDone}</h3>
-      <p style={{ color:dark?"rgba(255,255,255,0.45)":H.textSub,fontSize:13 }}>{t.waitlistDoneSub}</p>
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  const submit = async () => {
+    if (!email.includes("@")) return;
+    setLoading(true);
+    setError(false);
+    try {
+      const res = await fetch("https://formspree.io/f/xaqkglpl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ email, source: "ONEDM Waitlist" }),
+      });
+      if (res.ok) {
+        setDone(true);
+      } else {
+        setError(true);
+      }
+    } catch {
+      setError(true);
+    }
+    setLoading(false);
+  };
+
+  if (done) return (
+    <div style={{ textAlign:"center", animation:"riseIn .5s ease" }}>
+      <div style={{ width:48, height:48, borderRadius:"50%", background:`linear-gradient(135deg,${H.primary},${H.purple})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:20, margin:"0 auto 12px", color:"#fff" }}>✦</div>
+      <h3 style={{ fontFamily:"'Playfair Display',Georgia,serif", fontSize:20, color:dark?"#fff":H.text, marginBottom:6 }}>{t.waitlistDone}</h3>
+      <p style={{ color:dark?"rgba(255,255,255,0.45)":H.textSub, fontSize:13 }}>{t.waitlistDoneSub}</p>
     </div>
   );
+
   return (
-    <div style={{ maxWidth:480,margin:"0 auto" }}>
-      <div style={{ display:"flex",gap:10 }}>
-        <input type="email" placeholder={t.waitlistPlaceholder} value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&submit()}
-          style={{ flex:1,background:dark?"rgba(255,255,255,0.08)":H.bgAlt,border:`1px solid ${dark?"rgba(255,255,255,0.14)":H.border}`,borderRadius:14,padding:"13px 18px",color:dark?"#fff":H.text,fontSize:14,outline:"none",fontFamily:"'Outfit',sans-serif" }}/>
-        <button onClick={submit} style={{ background:`linear-gradient(135deg,${H.primary},${H.purple})`,border:"none",borderRadius:14,padding:"13px 26px",color:"#fff",fontWeight:700,fontSize:12,letterSpacing:.5,cursor:"pointer",whiteSpace:"nowrap" }}>{t.waitlistBtn}</button>
+    <div style={{ maxWidth:480, margin:"0 auto" }}>
+      <div style={{ display:"flex", gap:10 }}>
+        <input
+          type="email"
+          placeholder={t.waitlistPlaceholder}
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && submit()}
+          style={{ flex:1, background:dark?"rgba(255,255,255,0.08)":H.bgAlt, border:`1px solid ${error?"#FF5C3A":dark?"rgba(255,255,255,0.14)":H.border}`, borderRadius:14, padding:"13px 18px", color:dark?"#fff":H.text, fontSize:14, outline:"none", fontFamily:"'Outfit',sans-serif" }}
+        />
+        <button
+          onClick={submit}
+          disabled={loading}
+          style={{ background:loading?`rgba(61,47,232,0.5)`:`linear-gradient(135deg,${H.primary},${H.purple})`, border:"none", borderRadius:14, padding:"13px 26px", color:"#fff", fontWeight:700, fontSize:12, letterSpacing:.5, cursor:loading?"not-allowed":"pointer", whiteSpace:"nowrap", minWidth:90 }}
+        >
+          {loading ? "..." : t.waitlistBtn}
+        </button>
       </div>
-      <p style={{ textAlign:"center",color:dark?"rgba(255,255,255,0.28)":H.textMuted,fontSize:11,marginTop:10 }}>{t.waitlistSub}</p>
+      {error && <p style={{ textAlign:"center", color:"#FF5C3A", fontSize:11, marginTop:8 }}>Algo correu mal. Tenta novamente.</p>}
+      <p style={{ textAlign:"center", color:dark?"rgba(255,255,255,0.28)":H.textMuted, fontSize:11, marginTop:10 }}>{t.waitlistSub}</p>
     </div>
   );
 }
