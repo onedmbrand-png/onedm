@@ -714,7 +714,7 @@ function MealPlanner() {
         <div style={{ marginBottom:14 }}>
           <label style={lbl}>{t.mealDestLabel}</label>
           <div style={{ display:"flex",gap:6,flexWrap:"wrap" }}>
-            {DESTINATIONS.slice(0,4).map(d=>(
+            {DESTINATIONS.slice(0,6).map(d=>(
               <button key={d.code} onClick={()=>setDest(d)} style={{ padding:"5px 11px",borderRadius:20,border:`1px solid ${dest.code===d.code?d.color:H.border}`,background:dest.code===d.code?`${d.color}10`:"transparent",color:dest.code===d.code?d.color:H.textSub,fontSize:11,cursor:"pointer",transition:"all .2s" }}>{d.flag} {d.city}</button>
             ))}
           </div>
@@ -837,7 +837,32 @@ function PartnerForm({ onSuccess }) {
   const [loading,setLoading]=useState(false);
   const set=k=>v=>setForm(f=>({...f,[k]:v}));
   const valid=form.name&&form.email&&form.category;
-  const submit=()=>{ if(!valid) return; setLoading(true); setTimeout(()=>{ setLoading(false); onSuccess(form); },1600); };
+  const submit=async()=>{
+    if(!valid) return;
+    setLoading(true);
+    try {
+      const res = await fetch("https://formspree.io/f/xaqkglpl", {
+        method:"POST",
+        headers:{"Content-Type":"application/json","Accept":"application/json"},
+        body: JSON.stringify({
+          _subject: `Novo Parceiro ONEDM: ${form.name}`,
+          nome_espaco: form.name,
+          categoria: form.category,
+          localizacao: form.location,
+          instagram: form.instagram,
+          email: form.email,
+          whatsapp: form.phone,
+          descricao: form.about,
+          source: "ONEDM Partners Page",
+        }),
+      });
+      setLoading(false);
+      if(res.ok) onSuccess(form);
+    } catch {
+      setLoading(false);
+      onSuccess(form);
+    }
+  };
   const cats = [t.fCatPH, ...t.categories];
 
   return (
